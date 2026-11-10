@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { count, eq, max, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 import { ordersSchema } from "../../db/schema/sqlite/orders";
@@ -67,4 +67,22 @@ export class OrderService {
   static async getAllOrders() {
     return await sqliteDb.select().from(ordersSchema);
   }
+
+
+
+  static async getSyncStats() {
+  const [pendingOrders] = await sqliteDb
+    .select({ count: count() })
+    .from(ordersSchema)
+    .where(eq(ordersSchema.syncStatus, 'pending'));
+
+  const [lastSyncedOrder] = await sqliteDb
+    .select({ lastSyncedAt: max(ordersSchema.lastSyncedAt) })
+    .from(ordersSchema);
+
+  return {
+    pendingOrders: pendingOrders.count,
+    lastSyncedAt: lastSyncedOrder.lastSyncedAt,
+  };
+}
 }

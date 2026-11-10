@@ -3,6 +3,7 @@ import { OrderService } from "../service/order/order.service";
 import { ErrorResponse, SuccessResponse } from "../utils/response";
 import { HttpCodes } from "../config/Errors";
 import type { OrderI, OrderStatus } from "../types/order.type";
+import { OrderSyncWorker } from "../service/orderSyncWorker/orderSyncWorker";
 
 export class OrderController {
   static async getOrders(_req: Request, res: Response) {
@@ -116,4 +117,20 @@ export class OrderController {
       );
     }
   }
+  static async getSyncStatus(_req: Request, res: Response) {
+  const workerStatus = OrderSyncWorker.getStatus();
+  const syncStats = await OrderService.getSyncStats();
+
+  const status = workerStatus.isRunning
+    ? 'syncing'
+    : syncStats.pendingOrders > 0
+      ? 'degraded'
+      : 'healthy';
+
+  return res.status(200).json({
+    status,
+    ...workerStatus,
+    ...syncStats,
+  });
+}
 }

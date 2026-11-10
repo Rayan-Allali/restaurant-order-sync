@@ -73,7 +73,12 @@ export class OrderSyncWorker {
       this.MAX_RETRY_DELAY_MS,
     );
   }
-
+  static getStatus() {
+    return {
+      isRunning: this.isRunning,
+      isStarted: this.isStarted,
+    };
+  }
   private static async syncPendingOrders() {
     if (this.isRunning || !this.isStarted) return;
 
